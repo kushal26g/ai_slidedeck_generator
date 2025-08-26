@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, send_from_directory, flash, r
 from pptx import Presentation
 import ollama
 import logging
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -23,7 +24,9 @@ def generate_presentation_content(topic):
     try:
         prompt = f"""
         Generate a 7-slide presentation about "{topic}".
-        Provide the content in JSON format with the following structure:
+        Provide the content ONLY in a raw JSON format with the following structure.
+        Do not include any introductory text, markdown code blocks (```json), or explanations.
+        The response should start with {{ and end with }}.
         {{
           "title": "Presentation Title",
           "overview": ["Point 1", "Point 2", "Point 3"],
