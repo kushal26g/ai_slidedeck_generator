@@ -21,37 +21,49 @@ def generate_presentation_content(topic):
     """
     Generates presentation content using the Ollama Llama3 model.
     """
+    prompt = f"""
+    Generate a 7-slide presentation about "{topic}".
+    Provide the content ONLY in a raw JSON format.
+    The response must start with {{ and end with }}. Do not add any other text.
+    {{
+      "title": "Presentation Title",
+      "overview": ["Point 1", "Point 2", "Point 3"],
+      "slides": [
+        {{"title": "Slide 3 Title", "points": ["Point A", "Point B", "Point C"]}},
+        {{"title": "Slide 4 Title", "points": ["Point A", "Point B", "Point C"]}},
+        {{"title": "Slide 5 Title", "points": ["Point A", "Point B", "Point C"]}},
+        {{"title": "Slide 6 Title", "points": ["Point A", "Point B", "Point C"]}}
+      ],
+      "conclusion": ["Takeaway 1", "Takeaway 2", "Takeaway 3"]
+    }}
+    """
     try:
-        prompt = f"""
-        Generate a 7-slide presentation about "{topic}".
-        Provide the content ONLY in a raw JSON format with the following structure.
-        Do not include any introductory text, markdown code blocks (```json), or explanations.
-        The response should start with {{ and end with }}.
-        {{
-          "title": "Presentation Title",
-          "overview": ["Point 1", "Point 2", "Point 3"],
-          "slides": [
-            {{"title": "Slide 3 Title", "points": ["Point A", "Point B", "Point C"]}},
-            {{"title": "Slide 4 Title", "points": ["Point A", "Point B", "Point C"]}},
-            {{"title": "Slide 5 Title", "points": ["Point A", "Point B", "Point C"]}},
-            {{"title": "Slide 6 Title", "points": ["Point A", "Point B", "Point C"]}}
-          ],
-          "conclusion": ["Takeaway 1", "Takeaway 2", "Takeaway 3"]
-        }}
-        """
         logging.info(f"Generating content for topic: {topic}")
         response = ollama.chat(
             model='llama3',
             messages=[{'role': 'user', 'content': prompt}],
-            options={'temperature': 0.7}
+            options={'temperature': 0.2} # Lower temperature for structured output
         )
         content = response['message']['content']
-        logging.info("Content generated successfully.")
-        return json.loads(content)
-    except Exception as e:
-        logging.error(f"Error generating content: {e}")
-        return None
 
+        # Find the start and end of the JSON object to ensure clean parsing
+        json_start_index = content.find('{')
+        json_end_index = content.rfind('}') + 1
+
+        if json_start_index == -1 or json_end_index == 0:
+            raise ValueError("No JSON object found in the LLM response.")
+
+        json_string = content[json_start_index:json_end_index]
+
+        parsed_json = json.loads(json_string)
+        logging.info("JSON parsed successfully.")
+        return parsed_json
+
+    except Exception as e:
+        logging.error(f"An error occurred in generate_presentation_content: {e}")
+        if 'content' in locals():
+            logging.error(f"Problematic content from LLM was: {content}")
+        return None    
 def create_powerpoint(topic, content):
     """
     Creates a PowerPoint presentation from the generated content.
