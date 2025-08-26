@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Slide Deck Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Slide Deck Generator</h1>
+        <p>Enter a topic to automatically generate a PowerPoint presentation.</p>
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+                <p>{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form action="/" method="post">
+            <input type="text" name="topic" placeholder="e.g., Climate Change, LLM Evaluation">
+            <button type="submit">Generate Presentation</button>
+        </form>
+    </div>
+</body>
+</html>
